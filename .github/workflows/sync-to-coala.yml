@@ -1,0 +1,35 @@
+name: Sync NeetCode to coala-study
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: source
+
+      - uses: actions/checkout@v4
+        with:
+          repository: coala-study/coding-test
+          token: ${{ secrets.COALA_SYNC_TOKEN }}
+          path: target
+
+      - name: Copy to seungseok/neetcode
+        run: |
+          rm -rf target/seungseok/neetcode
+          mkdir -p target/seungseok/neetcode
+          rsync -a --exclude='.git' --exclude='.github' source/ target/seungseok/neetcode/
+
+      - name: Commit and push
+        run: |
+          cd target
+          git config user.name "tmdtjr"
+          git config user.email "202040921+tmdtjr@users.noreply.github.com"
+          git add seungseok/neetcode
+          git diff --staged --quiet || git commit -m "sync: update neetcode solutions"
+          git push
